@@ -30,10 +30,13 @@ if ($_SESSION['role'] == 'Musteri') {
     <title>Ana Sayfa</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .card-hover:hover { transform: translateY(-5px); transition: 0.3s; box-shadow: 0 10px 20px rgba(0,0,0,0.1) !important; }
+    </style>
 </head>
 <body class="bg-light">
     
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark px-4 shadow">
         <a class="navbar-brand" href="#">🏦 Banka Sistemi</a>
         
         <div class="ms-auto d-flex text-white align-items-center">
@@ -103,37 +106,51 @@ if ($_SESSION['role'] == 'Musteri') {
 
         <?php elseif ($_SESSION['role'] == 'Admin'): ?>
             
-            <h3 class="mb-4 text-danger">Yönetici Paneli</h3>
+            <h3 class="mb-4 text-danger"><i class="fa fa-user-shield"></i> Yönetici Paneli</h3>
             <div class="row">
+                
                 <div class="col-md-4">
-                    <div class="card text-center shadow-sm h-100 border-danger">
+                    <div class="card text-center shadow card-hover h-100 border-danger">
                         <div class="card-body">
                             <i class="fa fa-users-cog fa-3x text-danger mb-3"></i>
-                            <h5 class="card-title">Kullanıcı Yönetimi</h5>
-                            <p class="card-text">Sistemdeki tüm müşterileri, personelleri ve şifrelerini görüntüle.</p>
-                            <a href="admin/all_users.php" class="btn btn-outline-danger">Kullanıcıları Listele</a>
+                            <h5 class="card-title">Kullanıcı & Güvenlik</h5>
+                            <p class="card-text text-muted small">Kullanıcıları yönet ve şüpheli işlemleri izle.</p>
+                            
+                            <div class="d-grid gap-2">
+                                <a href="admin/all_users.php" class="btn btn-outline-danger">
+                                    <i class="fa fa-list"></i> Kullanıcıları Listele
+                                </a>
+                                
+                                <a href="admin/fraud_monitor.php" class="btn btn-dark">
+                                    <i class="fa fa-user-secret"></i> Fraud (Risk) İzle
+                                </a>
+
+                                <a href="admin/audit_logs.php" class="btn btn-secondary btn-sm">
+                                    <i class="fa fa-history"></i> Güvenlik Logları
+                                </a>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-4">
-                    <div class="card text-center shadow-sm h-100">
+                    <div class="card text-center shadow card-hover h-100">
                         <div class="card-body">
                             <i class="fa fa-chart-line fa-3x text-secondary mb-3"></i>
                             <h5 class="card-title">Raporlar</h5>
-                            <p class="card-text">En çok işlem yapan müşteriler ve şube varlık raporları.</p>
-                            <a href="admin/reports.php" class="btn btn-secondary">Raporları Görüntüle</a>
+                            <p class="card-text text-muted small">En çok işlem yapan müşteriler ve şube varlık raporları.</p>
+                            <a href="admin/reports.php" class="btn btn-secondary w-100 mt-3">Raporları Görüntüle</a>
                         </div>
                     </div>
                 </div>
 
                 <div class="col-md-4">
-                     <div class="card text-center shadow-sm h-100">
+                     <div class="card text-center shadow card-hover h-100">
                         <div class="card-body">
                             <i class="fa fa-wallet fa-3x text-success mb-3"></i>
                             <h5 class="card-title">Tüm Hesaplar</h5>
-                            <p class="card-text">Bankadaki tüm hesapları ve bakiyeleri gör.</p>
-                            <a href="admin/list_accounts.php" class="btn btn-success">Hesap Listesi</a>
+                            <p class="card-text text-muted small">Bankadaki tüm hesapları ve bakiyeleri gör.</p>
+                            <a href="admin/list_accounts.php" class="btn btn-success w-100 mt-3">Hesap Listesi</a>
                         </div>
                     </div>
                 </div>
@@ -141,7 +158,7 @@ if ($_SESSION['role'] == 'Musteri') {
 
         <?php elseif ($_SESSION['role'] == 'Personel'): ?>
             
-            <h3 class="mb-4">Personel İşlem Merkezi</h3>
+            <h3 class="mb-4 text-primary">Personel İşlem Merkezi</h3>
             <div class="row">
                 <div class="col-md-4">
                     <div class="card text-center shadow-sm h-100">
@@ -165,22 +182,4 @@ if ($_SESSION['role'] == 'Musteri') {
                     </div>
                 </div>
 
-                <div class="col-md-4">
-                    <div class="card text-center shadow-sm h-100 border-warning">
-                        <div class="card-body">
-                            <i class="fa fa-file-invoice-dollar fa-3x text-warning mb-3"></i>
-                            <h5 class="card-title">Kredi Başvuruları</h5>
-                            <p class="card-text">Müşterilerden gelen kredi taleplerini incele ve onayla.</p>
-                            <a href="personnel/loan_requests.php" class="btn btn-warning text-dark fw-bold">Başvuruları Yönet</a>
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-            
-        <?php endif; ?>
-
-    </div>
-
-</body>
-</html>
+                <div class="col-
