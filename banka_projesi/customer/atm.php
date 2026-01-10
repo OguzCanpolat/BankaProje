@@ -73,7 +73,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
     }
 }
 
-// --- HESAPLARI ÇEK (Dropdown İçin) ---
+// --- HESAPLARI ÇEK deneme github (Dropdown İçin) ---
 $stmt = $pdo->prepare("SELECT AccountID, AccountNumber, Balance FROM Accounts 
                        WHERE CustomerID = (SELECT CustomerID FROM Customers WHERE UserID = ?)");
 $stmt->execute([$user_id]);
