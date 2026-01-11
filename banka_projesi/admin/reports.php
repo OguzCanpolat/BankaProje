@@ -2,46 +2,65 @@
 session_start();
 require_once '../includes/db.php';
 
+// Güvenlik: Admin değilse at
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Admin') {
     header("Location: ../auth/login.php");
     exit;
 }
 
+$suspicious_transactions = [];
+
 try {
-    // 1. GENEL İSTATİSTİKLER (Direkt SQL ile)
-    // Toplam parayı çekiyoruz (Basitlik olsun diye tüm birimleri topluyoruz)
-    $stmt = $pdo->query("SELECT SUM(Balance) as ToplamPara FROM Accounts");
-    $toplamPara = $stmt->fetch()['ToplamPara'];
+    // --- KURAL 1: BÜYÜK PARA ÇIKIŞLARI (50.000 TL Üzeri) ---
+    // NOT: Transactions tablosunda 'Amount' ve 'TransactionDate' olduğunu varsayıyorum. 
+    // Eğer isimler farklıysa (örn: Tutar, Tarih) aşağıdaki SQL'de düzeltmelisin.
+    
+    $sql = "SELECT 
+                t.TransactionID,
+                t.Amount, 
+                t.TransactionDate,
+                c.FirstName, 
+                c.LastName, 
+                c.CustomerID
+            FROM Transactions t
+            INNER JOIN Accounts a ON t.SenderAccountID = a.AccountID
+            INNER JOIN Customers c ON a.CustomerID = c.CustomerID
+            WHERE t.Amount >= 50000
+            ORDER BY t.TransactionDate DESC
+            LIMIT 20";
 
-    // Müşteri Sayısı
-    $stmt = $pdo->query("SELECT COUNT(*) as Sayi FROM Customers");
-    $toplamMusteri = $stmt->fetch()['Sayi'];
+    $stmt = $pdo->prepare($sql);
+    $stmt->execute();
+    
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $row['reason'] = "🚨 Yüksek Tutar (Limit Aşımı)";
+        $suspicious_transactions[] = $row;
+    }
 
-    // Personel Sayısı
-    $stmt = $pdo->query("SELECT COUNT(*) as Sayi FROM Employees");
-    $toplamPersonel = $stmt->fetch()['Sayi'];
-
-
-    // 2. EN ÇOK İŞLEM YAPAN MÜŞTERİLER
-    // Transactions tablosunu Customers ile birleştirip sayıyoruz
-    $sqlTop = "SELECT c.FirstName, c.LastName, COUNT(t.TransactionID) as IslemSayisi 
-               FROM Transactions t
-               JOIN Accounts a ON (t.SenderAccountID = a.AccountID OR t.ReceiverAccountID = a.AccountID)
-               JOIN Customers c ON a.CustomerID = c.CustomerID
-               GROUP BY c.CustomerID
-               ORDER BY IslemSayisi DESC 
-               LIMIT 5";
-    $topCustomers = $pdo->query($sqlTop)->fetchAll();
-
-
-    // 3. HESAP TÜRÜNE GÖRE DAĞILIM (Şube yerine Para Birimi Raporu daha mantıklı)
-    $sqlCurrency = "SELECT Currency, SUM(Balance) as ToplamTutar, COUNT(*) as HesapSayisi 
-                    FROM Accounts 
-                    GROUP BY Currency";
-    $currencyStats = $pdo->query($sqlCurrency)->fetchAll();
+    // --- KURAL 2: GECE İŞLEMLERİ (02:00 - 05:00) ---
+    // SQL'deki HOUR fonksiyonu ile saati yakalıyoruz
+    $sql_night = "SELECT 
+                    t.TransactionID,
+                    t.Amount, 
+                    t.TransactionDate,
+                    c.FirstName, 
+                    c.LastName, 
+                    c.CustomerID
+                FROM Transactions t
+                INNER JOIN Accounts a ON t.SenderAccountID = a.AccountID
+                INNER JOIN Customers c ON a.CustomerID = c.CustomerID
+                WHERE HOUR(t.TransactionDate) BETWEEN 2 AND 5
+                ORDER BY t.TransactionDate DESC
+                LIMIT 20";
+                
+    $stmt = $pdo->query($sql_night);
+    while ($row = $stmt->fetch(PDO::FETCH_ASSOC)) {
+        $row['reason'] = "🌙 Gece İşlemi (02:00-05:00)";
+        $suspicious_transactions[] = $row;
+    }
 
 } catch (PDOException $e) {
-    die("Veritabanı hatası: " . $e->getMessage());
+    $error = "Veritabanı hatası: " . $e->getMessage();
 }
 ?>
 
@@ -49,105 +68,78 @@ try {
 <html lang="tr">
 <head>
     <meta charset="UTF-8">
-    <title>Banka Raporları</title>
+    <title>Fraud Monitor - Risk Takip</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        .fraud-row { border-left: 5px solid #dc3545; background-color: #fff5f5; }
+        .badge-danger { background-color: #dc3545; color: white; padding: 5px 10px; border-radius: 4px; }
+    </style>
 </head>
 <body class="bg-light">
 
-    <div class="container mt-5">
-        <div class="d-flex justify-content-between align-items-center mb-4">
-            <h2><i class="fa fa-chart-pie text-primary"></i> Finansal Raporlar</h2>
-            <a href="../index.php" class="btn btn-secondary">Ana Sayfa</a>
-        </div>
-
-        <div class="row mb-4">
-            <div class="col-md-4">
-                <div class="card text-white bg-primary shadow">
-                    <div class="card-body">
-                        <h5 class="card-title">Toplam Banka Hacmi</h5>
-                        <h2><?= number_format($toplamPara, 2) ?> <small class="fs-6">(Karışık)</small></h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-success shadow">
-                    <div class="card-body">
-                        <h5 class="card-title">Aktif Müşteri</h5>
-                        <h2><?= $toplamMusteri ?> Kişi</h2>
-                    </div>
-                </div>
-            </div>
-            <div class="col-md-4">
-                <div class="card text-white bg-warning text-dark shadow">
-                    <div class="card-body">
-                        <h5 class="card-title">Personel Sayısı</h5>
-                        <h2><?= $toplamPersonel ?> Kişi</h2>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="row">
-            <div class="col-md-6">
-                <div class="card shadow h-100">
-                    <div class="card-header bg-dark text-white">
-                        <i class="fa fa-trophy text-warning"></i> En Çok İşlem Yapanlar (Top 5)
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-striped">
-                            <thead>
-                                <tr>
-                                    <th>Müşteri Adı</th>
-                                    <th class="text-end">İşlem Adedi</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($topCustomers as $tc): ?>
-                                    <tr>
-                                        <td><?= $tc['FirstName'] ?> <?= $tc['LastName'] ?></td>
-                                        <td class="text-end fw-bold"><?= $tc['IslemSayisi'] ?></td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                        <?php if(empty($topCustomers)) echo "<p class='text-muted text-center'>Henüz işlem kaydı yok.</p>"; ?>
-                    </div>
-                </div>
-            </div>
-
-            <div class="col-md-6">
-                <div class="card shadow h-100">
-                    <div class="card-header bg-dark text-white">
-                        <i class="fa fa-money-bill-wave"></i> Varlık Dağılımı (Döviz/TL)
-                    </div>
-                    <div class="card-body">
-                        <table class="table table-bordered">
-                            <thead>
-                                <tr>
-                                    <th>Para Birimi</th>
-                                    <th>Hesap Sayısı</th>
-                                    <th class="text-end">Toplam Tutar</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php foreach ($currencyStats as $cs): ?>
-                                    <tr>
-                                        <td class="fw-bold"><?= $cs['Currency'] ?? 'TL' ?></td>
-                                        <td><?= $cs['HesapSayisi'] ?></td>
-                                        <td class="text-end text-success fw-bold">
-                                            <?= number_format($cs['ToplamTutar'], 2) ?>
-                                        </td>
-                                    </tr>
-                                <?php endforeach; ?>
-                            </tbody>
-                        </table>
-                    </div>
-                </div>
-            </div>
-        </div>
-
+<div class="container mt-5">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2 class="text-danger"><i class="fas fa-shield-alt"></i> Fraud Monitor (Risk İzleme)</h2>
+        <a href="reports.php" class="btn btn-secondary">Raporlara Dön</a>
     </div>
+
+    <?php if(isset($error)): ?>
+        <div class="alert alert-danger"><?php echo $error; ?></div>
+    <?php endif; ?>
+
+    <div class="card shadow">
+        <div class="card-body p-0">
+            <table class="table table-hover mb-0">
+                <thead class="table-dark">
+                    <tr>
+                        <th>Müşteri</th>
+                        <th>Risk Nedeni</th>
+                        <th>İşlem Tutarı</th>
+                        <th>Tarih</th>
+                        <th>Aksiyon</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <?php if (empty($suspicious_transactions)): ?>
+                        <tr>
+                            <td colspan="5" class="text-center py-4">
+                                <i class="fas fa-check-circle text-success fa-3x mb-3"></i><br>
+                                <span class="text-muted">Harika! Şüpheli bir işlem görünmüyor.</span>
+                            </td>
+                        </tr>
+                    <?php else: ?>
+                        <?php foreach ($suspicious_transactions as $sus): ?>
+                        <tr class="fraud-row">
+                            <td>
+                                <strong><?php echo htmlspecialchars($sus['FirstName'] . ' ' . $sus['LastName']); ?></strong><br>
+                                <small class="text-muted">Müşteri ID: <?php echo $sus['CustomerID']; ?></small>
+                            </td>
+                            <td>
+                                <span class="badge-danger">
+                                    <i class="fas fa-exclamation-triangle"></i> <?php echo $sus['reason']; ?>
+                                </span>
+                            </td>
+                            <td class="fw-bold"><?php echo number_format($sus['Amount'], 2); ?></td>
+                            <td><?php echo $sus['TransactionDate']; ?></td>
+                            <td>
+                                <button class="btn btn-outline-danger btn-sm">
+                                    <i class="fas fa-ban"></i> Hesabı İncele
+                                </button>
+                            </td>
+                        </tr>
+                        <?php endforeach; ?>
+                    <?php endif; ?>
+                </tbody>
+            </table>
+        </div>
+    </div>
+    
+    <div class="alert alert-info mt-3">
+        <i class="fas fa-info-circle"></i> 
+        <strong>Nasıl Çalışır?</strong> Sistem otomatik olarak 50.000 TL üzeri transferleri ve gece 02:00-05:00 arası yapılan işlemleri buraya düşürür.
+    </div>
+</div>
 
 </body>
 </html>
