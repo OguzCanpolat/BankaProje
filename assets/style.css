@@ -1,0 +1,99 @@
+/* assets/style.css */
+
+/* 1. FONT VE TEMEL AYARLAR */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+:root {
+    --primary-color: #1e3c72;
+    --primary-gradient: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    --secondary-color: #ff512f;
+    --secondary-gradient: linear-gradient(135deg, #ff512f 0%, #dd2476 100%);
+    --bg-color: #f0f2f5;
+    --text-dark: #2d3436;
+    --text-light: #636e72;
+    --white: #ffffff;
+    --shadow-soft: 0 10px 30px rgba(0, 0, 0, 0.05);
+    --shadow-strong: 0 15px 35px rgba(0, 0, 0, 0.2);
+}
+
+body {
+    font-family: 'Poppins', sans-serif;
+    background-color: var(--bg-color);
+    color: var(--text-dark);
+    min-height: 100vh;
+}
+
+/* 2. ORTAK KART TASARIMLARI */
+.glass-card {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 20px;
+    box-shadow: var(--shadow-soft);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    overflow: hidden;
+    transition: transform 0.3s ease;
+}
+
+.glass-card:hover {
+    transform: translateY(-5px);
+    box-shadow: var(--shadow-strong);
+}
+
+/* 3. FORM ELEMANLARI */
+.form-control, .form-select {
+    border-radius: 12px;
+    padding: 14px;
+    border: 1px solid #e1e1e1;
+    background-color: #f9f9f9;
+    font-size: 0.95rem;
+    transition: all 0.3s ease;
+}
+
+.form-control:focus, .form-select:focus {
+    background-color: #fff;
+    border-color: var(--primary-color);
+    box-shadow: 0 0 0 4px rgba(30, 60, 114, 0.1);
+}
+
+.input-group-text {
+    border-radius: 12px 0 0 12px;
+    border: 1px solid #e1e1e1;
+    background-color: #fff;
+    color: var(--text-light);
+}
+
+/* 4. BUTONLAR */
+.btn-primary-custom {
+    background: var(--primary-gradient);
+    color: #fff;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 12px;
+    font-weight: 600;
+    letter-spacing: 0.5px;
+    box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-primary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(30, 60, 114, 0.4);
+    color: #fff;
+}
+
+.btn-secondary-custom {
+    background: var(--secondary-gradient);
+    color: #fff;
+    border: none;
+    padding: 14px 25px;
+    border-radius: 12px;
+    font-weight: 600;
+    box-shadow: 0 4px 15px rgba(221, 36, 118, 0.3);
+    transition: all 0.3s ease;
+}
+
+.btn-secondary-custom:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(221, 36, 118, 0.4);
+    color: #fff;
+}
