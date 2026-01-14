@@ -9,7 +9,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Admin') {
 }
 
 // Logları Çek (Kullanıcı isimleriyle birleştirerek) BÜTÜN CSS DEGİSTİ. Yeni eklemeler yapılmadı
-// LogID'ye göre AZALAN (DESC) sıralıyoruz ki en son yapılan işlem en üstte görünsün.
+// LogID'ye göre AZALAN (DESC) sıralıyoruz ki en son yapılan işlem en üstte görünsün xxxxxxx.
 $sql = "SELECT 
             al.*, 
             u.Email,
