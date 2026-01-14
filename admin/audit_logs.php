@@ -8,7 +8,7 @@ if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Admin') {
     exit;
 }
 
-// Logları Çek (Kullanıcı isimleriyle birleştirerek) BÜTÜN CSS DEGİSTİ.
+// Logları Çek (Kullanıcı isimleriyle birleştirerek) BÜTÜN CSS DEGİSTİ. Yeni eklemeler yapılmadı
 // LogID'ye göre AZALAN (DESC) sıralıyoruz ki en son yapılan işlem en üstte görünsün.
 $sql = "SELECT 
             al.*, 
@@ -28,6 +28,7 @@ $sql = "SELECT
 
 $logs = $pdo->query($sql)->fetchAll();
 ?>
+
 
 <!DOCTYPE html>
 <html lang="tr">
