@@ -1,8 +1,10 @@
+
+
 <?php
 session_start();
 require_once '../includes/db.php';
 
-// Güvenlik: Admin değilse at
+// Güvenlik: Admin değilse at  bu son depişiklikler
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Admin') {
     header("Location: ../auth/login.php");
     exit;
