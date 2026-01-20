@@ -4,7 +4,7 @@
 session_start();
 require_once '../includes/db.php';
 
-// Güvenlik: Admin değilse at  bu son depişiklikler
+// Güvenlik: Admin değilse at  bu son depişikliklerc
 if (!isset($_SESSION['user_id']) || $_SESSION['role'] != 'Admin') {
     header("Location: ../auth/login.php");
     exit;
@@ -23,7 +23,7 @@ try {
     $stmt->execute();
     $accounts = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
-    // Hata olursa ekrana daha şık basalım
+    // Hata olursa ekrana daha şık basalım deneme
     $error = "Veri hatası: " . $e->getMessage();
     $accounts = []; // Hata durumunda boş dizi ata ki alttaki döngü patlamasın
 }
